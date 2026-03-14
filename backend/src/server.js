@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { z } = require('zod');
+const { drivers, jobs } = require('./data');
 
 const app = express();
 const PORT = Number(process.env.PORT || 4000);
@@ -20,6 +21,23 @@ app.use(
   }),
 );
 app.use(express.json());
+
+function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'missing token' });
+  }
+
+  const token = authHeader.slice(7);
+
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET || '-');
+    return next();
+  } catch {
+    return res.status(401).json({ message: 'bad token' });
+  }
+}
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true });
@@ -60,6 +78,33 @@ app.post('/login', (req, res) => {
       email: loginUser.email,
       name: loginUser.name,
     },
+  });
+});
+
+app.get('/me', requireAuth, (req, res) => {
+  res.json({
+    user: req.user,
+  });
+});
+
+app.get('/drivers', requireAuth, (_req, res) => {
+  res.json(drivers);
+});
+
+app.get('/jobs', requireAuth, (_req, res) => {
+  const items = jobs.map((job) => ({
+    ...job,
+    driver: drivers.find((driver) => driver.id === job.driverId)?.name || '-',
+  }));
+
+  res.json(items);
+});
+
+app.get('/analytics/kpis', requireAuth, (_req, res) => {
+  res.json({
+    openJobs: jobs.filter((job) => job.status === 'open').length,
+    activeDrivers: drivers.filter((driver) => driver.status === 'active').length,
+    doneJobs: jobs.filter((job) => job.status === 'done').length,
   });
 });
 
