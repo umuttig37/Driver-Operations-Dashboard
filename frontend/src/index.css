@@ -18,3 +18,26 @@ body {
 #root {
   min-height: 100vh;
 }
+
+a,
+button,
+input {
+  font: inherit;
+}
+
+@media (max-width: 900px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    grid-auto-flow: column;
+    overflow-x: auto;
+    align-content: stretch;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
