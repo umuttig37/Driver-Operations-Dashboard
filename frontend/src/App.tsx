@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom'
 import './App.css'
@@ -11,6 +11,12 @@ type LoginData = {
     name: string
     email: string
   }
+}
+
+type KpiData = {
+  openJobs: number
+  activeDrivers: number
+  doneJobs: number
 }
 
 function LoginPage({ onLogin }: { onLogin: (value: LoginData) => void }) {
@@ -109,13 +115,69 @@ function AppLayout({ auth, onLogout }: { auth: LoginData; onLogout: () => void }
 
         <section className="content">
           <Routes>
-            <Route path="dashboard" element={<PageCard title="Dashboard" text="dashboard shell valmis" />} />
+            <Route path="dashboard" element={<DashboardPage token={auth.token} />} />
             <Route path="drivers" element={<PageCard title="Drivers" text="kuskit tulee seuraavaksi" />} />
             <Route path="jobs" element={<PageCard title="Jobs" text="jobit tulee seuraavaksi" />} />
             <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
           </Routes>
         </section>
       </div>
+    </div>
+  )
+}
+
+function DashboardPage({ token }: { token: string }) {
+  const [kpis, setKpis] = useState<KpiData | null>(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    async function loadKpis() {
+      try {
+        const response = await fetch(`${API_BASE}/analytics/kpis`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        const data = (await response.json()) as KpiData | { message?: string }
+
+        if (!response.ok) {
+          throw new Error('message' in data ? data.message : 'dashboard failed')
+        }
+
+        setKpis(data as KpiData)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'dashboard failed')
+      }
+    }
+
+    loadKpis()
+  }, [token])
+
+  return (
+    <div className="dashboard">
+      <div className="content-card hero-card">
+        <p className="eyebrow">Dashboard</p>
+        <h2>Overview</h2>
+        <p className="hero-text">eka dashboard-runko hakee jo oikeaa dataa backendistä</p>
+      </div>
+
+      {error && <p className="error">{error}</p>}
+
+      <div className="kpi-grid">
+        <KpiCard label="open jobs" value={String(kpis?.openJobs ?? '-')} />
+        <KpiCard label="active drivers" value={String(kpis?.activeDrivers ?? '-')} />
+        <KpiCard label="done jobs" value={String(kpis?.doneJobs ?? '-')} />
+      </div>
+    </div>
+  )
+}
+
+function KpiCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="content-card kpi-card">
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   )
 }

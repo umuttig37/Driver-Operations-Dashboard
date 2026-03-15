@@ -183,3 +183,40 @@
   margin: 0;
   color: #475569;
 }
+
+.dashboard {
+  display: grid;
+  gap: 20px;
+}
+
+.hero-card {
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(15, 23, 42, 0.02)),
+    #fff;
+}
+
+.hero-text {
+  margin-top: 12px !important;
+}
+
+.kpi-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.kpi-card {
+  display: grid;
+  gap: 10px;
+}
+
+.kpi-card span {
+  color: #64748b;
+  text-transform: lowercase;
+}
+
+.kpi-card strong {
+  font-size: 2.4rem;
+  line-height: 1;
+  color: #0f172a;
+}
